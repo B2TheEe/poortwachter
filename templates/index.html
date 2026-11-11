@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ guard }} – Level {{ level.number }}</title>
+<style>
+  :root { --bg:#14111f; --card:#211c33; --accent:#b48cff; --text:#ece8f5; --muted:#9a93ad; --bad:#ff7a90; --good:#7be0a6; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--text);
+         display:flex; justify-content:center; padding:2rem 1rem; }
+  main { width:100%; max-width:680px; }
+  h1 { margin:0 0 .25rem; font-size:1.6rem; }
+  .levels { display:flex; gap:.4rem; margin:1rem 0 1.5rem; }
+  .levels a, .levels span { width:2.2rem; height:2.2rem; border-radius:50%; display:grid; place-items:center;
+         text-decoration:none; font-weight:600; background:var(--card); color:var(--muted); }
+  .levels a { color:var(--text); border:1px solid var(--accent); }
+  .levels .current { background:var(--accent); color:var(--bg); }
+  .card { background:var(--card); border-radius:14px; padding:1.25rem; margin-bottom:1rem; }
+  .intro { font-style:italic; }
+  textarea, input { width:100%; background:var(--bg); color:var(--text); border:1px solid #3a3352;
+         border-radius:10px; padding:.75rem; font:inherit; }
+  textarea { min-height:90px; resize:vertical; }
+  button { margin-top:.6rem; background:var(--accent); color:var(--bg); border:0; border-radius:10px;
+         padding:.6rem 1.2rem; font-weight:700; cursor:pointer; }
+  button:disabled { opacity:.5; cursor:wait; }
+  #reply { white-space:pre-wrap; min-height:2rem; }
+  .blocked { color:var(--bad); }
+  .muted { color:var(--muted); font-size:.85rem; }
+  .row { display:flex; gap:.6rem; align-items:flex-end; }
+  .row button { flex-shrink:0; }
+  #guessResult.good { color:var(--good); } #guessResult.bad { color:var(--bad); }
+  form.reset button { background:transparent; color:var(--muted); padding:0; font-weight:400; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🧙 {{ guard }}</h1>
+  <div class="muted">Level {{ level.number }} van {{ total }}</div>
+
+  <nav class="levels">
+    {% for i in range(1, total + 1) %}
+      {% if i <= unlocked %}<a href="/level/{{ i }}" class="{{ 'current' if i == level.number }}">{{ i }}</a>
+      {% else %}<span>🔒</span>{% endif %}
+    {% endfor %}
+  </nav>
+
+  <div class="card intro">“{{ level.intro }}”</div>
+
+  <div class="card">
+    <textarea id="msg" placeholder="Vraag de Poortwachter iets..."></textarea>
+    <button id="send">Verstuur</button>
+    <p id="reply"></p>
+    <div id="status" class="muted"></div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <input id="guess" placeholder="Raad het wachtwoord">
+      <button id="guessBtn">Raad</button>
+    </div>
+    <p id="guessResult"></p>
+  </div>
+
+  <form class="reset" method="post" action="/reset"><button>Voortgang resetten</button></form>
+</main>
+
+<script>
+const LEVEL = {{ level.number }};
+const $ = id => document.getElementById(id);
+
+async function post(url, body) {
+  const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+                               body: JSON.stringify(body) });
+  return r.json();
+}
+
+$("send").onclick = async () => {
+  const message = $("msg").value.trim();
+  if (!message) return;
+  $("send").disabled = true; $("status").textContent = "De Poortwachter denkt na...";
+  try {
+    const d = await post("/api/chat", { level: LEVEL, message });
+    // textContent, geen innerHTML: modeloutput is onbetrouwbare input!
+    $("reply").textContent = d.error || d.reply;
+    $("reply").className = (d.error || d.blocked) ? "blocked" : "";
+  } finally {
+    $("send").disabled = false; $("status").textContent = "";
+  }
+};
+
+$("msg").addEventListener("keydown", e => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) $("send").click();
+});
+
+$("guessBtn").onclick = async () => {
+  const d = await post("/api/guess", { level: LEVEL, guess: $("guess").value });
+  const out = $("guessResult");
+  if (d.error) { out.textContent = d.error; out.className = "bad"; return; }
+  if (!d.correct) { out.textContent = "Nee, dat is het niet. ✋"; out.className = "bad"; return; }
+  out.className = "good";
+  if (d.done) { out.textContent = "🎉 Je hebt alle levels gehaald! De poort staat open."; }
+  else { out.textContent = "Klopt! Op naar het volgende level..."; setTimeout(() => location = d.next, 1200); }
+};
+</script>
+</body>
+</html>
