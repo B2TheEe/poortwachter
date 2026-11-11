@@ -1,0 +1,17 @@
+# Geheimen
+.env
+
+# Spelerslog (bevat wat mensen typen + ongefilterde modelantwoorden)
+attempts.jsonl
+*.jsonl
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store

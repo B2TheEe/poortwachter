@@ -12,6 +12,14 @@ python app.py
 
 Open daarna http://localhost:5000
 
+### Eigen wachtwoorden en instellingen
+
+```bash
+cp .env.example .env    # Windows: copy .env.example .env
+```
+
+Vul in `.env` je eigen wachtwoorden in (`POORTWACHTER_PW_1` t/m `_7`) en eventueel je API-key. `.env` staat in `.gitignore` en komt dus niet op GitHub. Laat je een wachtwoord leeg, dan gebruikt de app het voorbeeldwachtwoord uit `levels.py`. Dat is prima om zelf te testen, maar die voorbeelden zijn publiek.
+
 ### Model kiezen
 
 | Provider | Instellen |
@@ -49,4 +57,4 @@ Elke poging komt in `attempts.jsonl` te staan, **inclusief het ongefilterde antw
 
 ## Online zetten?
 
-Doe dat pas na een paar aanpassingen: verander de wachtwoorden in `levels.py`, zet `FLASK_SECRET_KEY` vast, zet `debug=True` uit, voeg rate limiting toe (bijvoorbeeld met Flask-Limiter) en stel een uitgavenlimiet in bij je API-provider. Het log bevat wat spelers typen, dus vertel ze dat ook.
+Dat kan prima, met een paar voorzorgen. Stel je eigen wachtwoorden in als environment variables bij je hostingprovider, zet `FLASK_SECRET_KEY` vast, zet `debug=True` uit, voeg rate limiting toe (bijvoorbeeld met Flask-Limiter) en stel een uitgavenlimiet in bij je API-provider. Het log bevat wat spelers typen, dus vertel ze dat ook.

@@ -1,5 +1,17 @@
-"""Level-definities. Pas wachtwoorden aan voordat je het aan vrienden laat spelen!"""
+"""Level-definities.
+
+De echte wachtwoorden komen uit environment variables (POORTWACHTER_PW_1 t/m _7),
+bijvoorbeeld via een .env-bestand. De waarden hieronder zijn alleen voorbeelden:
+ze staan publiek op GitHub, dus gebruik ze niet als je anderen laat spelen.
+"""
+import os
 from dataclasses import dataclass
+
+try:  # .env automatisch inladen als python-dotenv geïnstalleerd is
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 GUARD_NAME = "De Poortwachter"
 
@@ -21,7 +33,8 @@ class Level:
     llm_judge: bool = False      # tweede LLM-call die beoordeelt of er iets lekt
 
 
-def _lvl(n, pw, intro, extra="", **defenses):
+def _lvl(n, example_pw, intro, extra="", **defenses):
+    pw = (os.getenv(f"POORTWACHTER_PW_{n}") or "").strip().upper() or example_pw
     prompt = BASE + f"Het geheime wachtwoord is {pw}. " + extra
     return Level(n, pw, intro, prompt, **defenses)
 
